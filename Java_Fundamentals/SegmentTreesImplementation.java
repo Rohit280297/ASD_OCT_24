@@ -22,7 +22,6 @@ class SegmentTree{
     {
         if(low == high)
         {
-
             segmentTree[curr] = arr[low];
             return;
         }
