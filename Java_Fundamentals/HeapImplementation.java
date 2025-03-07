@@ -1,6 +1,15 @@
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
+class Node{
+    int data;
+    Node next;
+
+    Node(int data){
+        this.data = data;
+    }
+}
+
 class Heap{
 
     int size;
@@ -27,7 +36,7 @@ class Heap{
             return;
         heap[this.size] = data;
         int index = this.size;
-        while(index > 0 && heap[index] > heap[(index-1)/2])
+        while(index > 0 && heap[index] < heap[(index-1)/2])
         {
             swap(heap, index, (index-1)/2); // swapping the current node and its parent in case of violation.
             index = (index-1)/2; // recursing up to the parent as the current node till the root node.
@@ -50,9 +59,9 @@ class Heap{
         int left = 2*parent + 1;
         int right = 2*parent + 2;
         int minIndex = parent;
-        if(left < size && heap[left] > heap[minIndex])
+        if(left < size && heap[left] < heap[minIndex])
             minIndex = left;
-        if(right < size && heap[right] > heap[minIndex])
+        if(right < size && heap[right] < heap[minIndex])
             minIndex = right;
 
         if(minIndex != parent)
@@ -93,6 +102,33 @@ class Heap{
     {
         return heap[0];
     }
+
+    void convertToMaxHeap()
+    {
+        int n = this.size;
+
+        for(int i=n/2-1;i>=0;i--)
+        {
+            maxHeapify(i, this.size);
+        }
+    }
+
+    void maxHeapify(int index, int size){
+        int parent = index;
+        int left = 2*parent + 1;
+        int right = 2*parent + 2;
+        int maxIndex = parent;
+        if(left < size && heap[left] > heap[maxIndex])
+        maxIndex = left;
+        if(right < size && heap[right] > heap[maxIndex])
+        maxIndex = right;
+
+        if(maxIndex != parent)
+        {
+            swap(heap, parent, maxIndex);
+            maxHeapify(maxIndex, size);
+        }
+    }
 }
 
 class Point{
@@ -119,16 +155,25 @@ class PointComparator implements Comparator<Point>{
 }
 
 
+class NodeComparator implements Comparator<Node>{
+
+    public int compare(Node n1, Node n2)
+    {
+        return n1.data - n2.data;
+    }
+}
+
+
 public class HeapImplementation {
     public static void main(String[] args)
     {
-        // int[] arr = {5,3,8,2,4,1};
-        // Heap hp = new Heap(arr.length);
-        // hp.buildHeap(arr);
-        // hp.printHeap();
+        int[] arr = {5,3,8,2,4,1};
+        Heap hp = new Heap(arr.length);
+        hp.buildHeap(arr);
+        hp.printHeap();
+        hp.convertToMaxHeap();
+        hp.printHeap();
         // hp.heapSort(hp.size);
-        // hp.printHeap();
-        // System.out.println(hp.remove());
         // hp.printHeap();
 
         // PriorityQueue<Integer> pq = new PriorityQueue<>();
@@ -166,31 +211,58 @@ public class HeapImplementation {
         //     System.out.print(x+" ");
         // System.out.println();
 
-        PriorityQueue<Point> points = new PriorityQueue<Point>(new PointComparator());
-        Point p1 = new Point(3,4);
-        Point p2 = new Point(3,2);
-        Point p3 = new Point(1,7);
-        Point p4 = new Point(5,8);
-        Point p5 = new Point(9,0);
-        Point p6 = new Point(3,0);
-        Point[] pArray = {p1,p2,p3,p4,p5,p6};
-        int k = 3;
-        for(int i=0;i<k;i++)
-            points.add(pArray[i]);
+        // PriorityQueue<Point> points = new PriorityQueue<Point>(new PointComparator());
+        // Point p1 = new Point(3,4);
+        // Point p2 = new Point(3,2);
+        // Point p3 = new Point(1,7);
+        // Point p4 = new Point(5,8);
+        // Point p5 = new Point(9,0);
+        // Point p6 = new Point(3,0);
+        // Point[] pArray = {p1,p2,p3,p4,p5,p6};
+        // int k = 3;
+        // for(int i=0;i<k;i++)
+        //     points.add(pArray[i]);
         
-        for(int i=k;i<pArray.length;i++)
+        // for(int i=k;i<pArray.length;i++)
+        // {
+        //     if(pArray[i].distanceFromOrigin() < points.peek().distanceFromOrigin())
+        //     {
+        //         points.remove();
+        //         points.add(pArray[i]);
+        //     }
+        // }
+
+        // while(!points.isEmpty())
+        // {
+        //     Point p = points.remove();
+        //     System.out.println(p.x+ " "+p.y+" "+p.distanceFromOrigin());
+        // }
+
+        Node[] lists;
+        PriorityQueue<Node> pq = new PriorityQueue<>(new NodeComparator());
+        
+        for(int i=0;i< lists.length;i++)
         {
-            if(pArray[i].distanceFromOrigin() < points.peek().distanceFromOrigin())
-            {
-                points.remove();
-                points.add(pArray[i]);
-            }
+            pq.add(lists[i]);
         }
 
-        while(!points.isEmpty())
+        Node newHead = null;
+        Node tail = null;
+        while(!pq.isEmpty())
         {
-            Point p = points.remove();
-            System.out.println(p.x+ " "+p.y+" "+p.distanceFromOrigin());
+            Node poppedNode = pq.remove();
+            if(newHead == null){
+                newHead = poppedNode;
+                tail = newHead;
+            }
+            else
+            {
+                tail.next = poppedNode;
+                tail = poppedNode;
+            }
+            if(poppedNode.next != null)
+                pq.add(poppedNode.next);
         }
+
     }
 }
