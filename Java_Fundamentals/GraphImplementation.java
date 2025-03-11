@@ -95,6 +95,53 @@ class Graph{
                 bfs(i,visited);
         }
     }
+
+    boolean hasCycle(Node src, boolean[] visited, int parentIndex, boolean[] inStack){
+        
+        if(inStack[src.index])
+            return true;
+        
+        visited[src.index] = true;
+        inStack[src.index] = true;
+        for(Node n : src.adjacentNodes)
+        {
+            if(!visited[n.index])
+            {
+                if(hasCycle(n,visited, src.index, inStack))
+                    return true;
+            }
+            // works fine for undirected.
+            // else if(n.index != parentIndex){
+            //      return true;
+            // }
+
+            // but for directed graph, we need to rely on the inStack value.
+            if(inStack[n.index])
+                return true;
+        }
+
+        inStack[src.index] = false;
+        return false;
+    }
+
+    boolean isCyclePresent()
+    {
+
+        boolean[] visited = new boolean[this.graph.size()];
+        boolean[] inStack = new boolean[this.graph.size()];
+
+        for(int i=0;i<this.graph.size();i++)
+        {
+            if(!visited[i])
+            {
+                if(hasCycle(this.graph.get(i), visited,-1, inStack)){
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
 
 public class GraphImplementation {
@@ -110,11 +157,12 @@ public class GraphImplementation {
         g.addEdge(0,2,false);
         // g.addEdge(1,2,false);
         g.addEdge(2,4, false);
-        // g.addEdge(1,3, false);
+        g.addEdge(1,3, false);
         // boolean[] visited = new boolean[g.graph.size()];
         // g.bfs(0,visited);
         // visited = new boolean[g.graph.size()];
         // g.dfs(0, visited);
         g.bfsForDisconnectedGraph();
+        System.out.println(g.isCyclePresent());
     }
 }
