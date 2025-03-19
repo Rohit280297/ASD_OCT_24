@@ -1,5 +1,7 @@
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -7,6 +9,7 @@ import java.util.Stack;
 class Node{
     int index;
     ArrayList<Node> adjacentNodes;
+    ArrayList<Edge>  edges;
 
     Node(int index)
     {
@@ -15,17 +18,94 @@ class Node{
     }
 }
 
+
+class EdgeComparator implements Comparator<Edge>{
+
+    public int compare(Edge e1, Edge e2)
+    {
+        return e1.weight - e2.weight;
+    }
+}
+
+class Edge{
+
+    int source;
+    int destination;
+    int weight;
+    boolean isDirected;
+
+    // for undirected, unweighted graph.
+    Edge(int source, int destination)
+    {
+        this.source = source;
+        this.destination = destination;
+        this.weight = 0;
+        this.isDirected = false;
+    }
+
+    // for undirected, weighted graph.
+    Edge(int source, int destination, int weight)
+    {
+        this.source = source;
+        this.destination = destination;
+        this.weight = weight;
+        this.isDirected = false;
+    }
+}
+
+class DisjointSet
+{
+    int[] parent;
+    DisjointSet(int nodes)
+    {
+        parent = new int[nodes];
+        for(int i=0;i<nodes;i++)
+            parent[i] = i;
+    }
+
+    int find(int x)
+    {
+        if(parent[x] == x)
+            return x;
+        
+        int px = parent[x];
+        return find(px);
+    }
+
+    void union(int x, int y)
+    {
+        int px = find(x);
+        int py = find(y);
+        parent[px] = py;
+    }
+}
+
 class Graph{
     ArrayList<Node> graph;
     int nVertex;
+    ArrayList<Edge> edges;
+    DisjointSet ds;
+    ArrayList<Edge> mst;
 
     Graph(){
         graph = new ArrayList<Node>();
         nVertex = 0;
+        edges = new ArrayList<>();
+        mst = new ArrayList<>();
+    }
+
+    void buildDisjointSet(){
+        ds = new DisjointSet(this.nVertex);
+        for(Edge e : this.edges){
+            if(ds.find(e.destination) != ds.find(e.source)){
+                ds.union(e.source, e.destination);
+            }
+        }
     }
 
     void addVertex(){
         graph.add(new Node(graph.size()));
+        this.nVertex++;
     }
 
     void addEdge(int source, int destination, boolean isDirected)
@@ -39,6 +119,19 @@ class Graph{
                 destinationNode.adjacentNodes.add(sourceNode);
         }
     }
+
+    void addEdge(int source, int destination, int weight)
+    {
+        if(source < graph.size() && destination < graph.size())
+        {
+            Node sourceNode = graph.get(source);
+            Node destinationNode = graph.get(destination);
+            sourceNode.adjacentNodes.add(destinationNode);
+            destinationNode.adjacentNodes.add(sourceNode);
+            this.edges.add(new Edge(source, destination, weight));
+        }
+    }
+
 
     void bfs(int source, boolean[] visited)
     {
@@ -142,6 +235,32 @@ class Graph{
 
         return false;
     }
+
+    // using kruskal's algorithm.
+    int minimumSpanningTree(){
+        int minimumCost = 0;
+        ds = new DisjointSet(this.nVertex);
+        PriorityQueue<Edge> pq = new PriorityQueue<>(new EdgeComparator());
+        pq.addAll(this.edges);
+        int count = 0;
+        while(count < this.nVertex - 1)
+        {
+            if(pq.isEmpty())
+            {
+                this.mst.clear();
+                return -1;
+            }
+            Edge poppedEdge = pq.remove();
+            if(ds.find(poppedEdge.source) != ds.find(poppedEdge.destination)){
+                minimumCost += poppedEdge.weight;
+                mst.add(poppedEdge);
+                count++;
+                ds.union(poppedEdge.source,poppedEdge.destination);
+            }
+
+        }
+        return minimumCost;
+    }
 }
 
 public class GraphImplementation {
@@ -153,16 +272,17 @@ public class GraphImplementation {
         g.addVertex();
         g.addVertex();
         g.addVertex();
-        g.addEdge(0,1, false);
-        g.addEdge(0,2,false);
-        // g.addEdge(1,2,false);
-        g.addEdge(2,4, false);
-        g.addEdge(1,3, false);
-        // boolean[] visited = new boolean[g.graph.size()];
-        // g.bfs(0,visited);
-        // visited = new boolean[g.graph.size()];
-        // g.dfs(0, visited);
-        g.bfsForDisconnectedGraph();
-        System.out.println(g.isCyclePresent());
+        g.addEdge(0,1,3);
+        g.addEdge(0,2,6);
+        g.addEdge(2,4,8);
+        g.addEdge(1,3,2);
+        g.addEdge(1,2,9);
+        g.addEdge(2,4,12);
+        g.addEdge(0,4,5);
+        // g.buildDisjointSet();
+        // System.out.println(g.ds.find(0));
+        // System.out.println(g.ds.find(1));
+        System.out.println(g.minimumSpanningTree());
+
     }
 }
