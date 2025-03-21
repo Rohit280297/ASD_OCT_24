@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Stack;
-
+import java.util.Arrays;
 
 class Node{
     int index;
@@ -15,9 +15,20 @@ class Node{
     {
         this.index = index;
         adjacentNodes = new ArrayList<>();
+        edges = new ArrayList<>();
+    }
+
+    int getWeight(int destination)
+    {
+        for(Edge e : this.edges)
+        {
+            if(e.destination == destination){
+                return e.weight;
+            }
+        }
+        return Integer.MAX_VALUE;
     }
 }
-
 
 class EdgeComparator implements Comparator<Edge>{
 
@@ -128,10 +139,16 @@ class Graph{
             Node destinationNode = graph.get(destination);
             sourceNode.adjacentNodes.add(destinationNode);
             destinationNode.adjacentNodes.add(sourceNode);
-            this.edges.add(new Edge(source, destination, weight));
+            Edge newEdge = new Edge(source, destination, weight);
+            this.edges.add(newEdge);
+            sourceNode.edges.add(newEdge);
+            // below line is the old code which is not correct. Since, in the destinationNode, the edge added should be of type (destination, source, weight).
+            // However, we were adding edge of type (source, destination, weight) to the destinationNode as well which was the actual problem.
+            // Replacing line 148 with line 149 will fix Djikstra's algorithm code without any other changes.
+            // destinationNode.edges.add(newEdge);
+            destinationNode.edges.add(new Edge(destination, source, weight));
         }
     }
-
 
     void bfs(int source, boolean[] visited)
     {
@@ -237,7 +254,8 @@ class Graph{
     }
 
     // using kruskal's algorithm.
-    int minimumSpanningTree(){
+    int minimumSpanningTreeUsingKruskal(){
+        mst.clear();
         int minimumCost = 0;
         ds = new DisjointSet(this.nVertex);
         PriorityQueue<Edge> pq = new PriorityQueue<>(new EdgeComparator());
@@ -261,6 +279,87 @@ class Graph{
         }
         return minimumCost;
     }
+
+    int minimumSpanningTreeUsingPrim()
+    {
+        mst.clear();
+        int minimumCost = 0;
+        PriorityQueue<Edge> pq = new PriorityQueue<>(new EdgeComparator());
+        boolean[] visited = new boolean[this.nVertex];
+        for(Edge e : this.graph.get(0).edges)
+        {
+            pq.add(e);
+        }
+        visited[0] = true;
+        while(!pq.isEmpty())
+        {
+            Edge e = pq.remove();
+            if(visited[e.destination])
+                continue;
+            
+            visited[e.destination] = true;
+            mst.add(e);
+            minimumCost += e.weight;
+            for(Edge newEdge : this.graph.get(e.destination).edges)
+            {
+                if(visited[newEdge.destination] == false)
+                    pq.add(newEdge);
+            }
+        }
+
+        return minimumCost;
+    }
+
+    int[] dijkstraAlgorithm(int source){
+        int[] cost = new int[this.nVertex];
+        Arrays.fill(cost, Integer.MAX_VALUE);
+        boolean[] visited = new boolean[this.nVertex];
+        PriorityQueue<Pair> pq = new PriorityQueue<>(new PairComparator());
+
+        cost[source] = 0;
+        pq.add(new Pair(source, 0));
+
+        while(!pq.isEmpty())
+        {
+            Pair p = pq.remove();
+            visited[p.index] = true;
+            for(Node x : this.graph.get(p.index).adjacentNodes)
+            {
+                if(visited[x.index] == false)
+                {
+                    // the pure blunder was not because of Djisktra's algorithm. But the implementation of how the edges were getting added to the node. 
+                    // Look at line number 145 for more explanation.
+                    if(cost[x.index] > p.cost + this.graph.get(p.index).getWeight(x.index)){
+                        cost[x.index] = p.cost + this.graph.get(p.index).getWeight(x.index);
+                        pq.add(new Pair(x.index, cost[x.index]));
+                    }
+                    
+                    
+                }
+                
+            } 
+        }
+
+        return cost;
+    }
+}
+
+class Pair{
+    int index;
+    int cost;
+    Pair(int index, int cost)
+    {
+        this.index = index;
+        this.cost = cost;
+    }
+}
+
+
+class PairComparator implements Comparator<Pair>{
+    public int compare(Pair p1, Pair p2)
+    {
+        return p1.cost - p2.cost;
+    }
 }
 
 public class GraphImplementation {
@@ -277,12 +376,17 @@ public class GraphImplementation {
         g.addEdge(2,4,8);
         g.addEdge(1,3,2);
         g.addEdge(1,2,9);
-        g.addEdge(2,4,12);
         g.addEdge(0,4,5);
         // g.buildDisjointSet();
         // System.out.println(g.ds.find(0));
-        // System.out.println(g.ds.find(1));
-        System.out.println(g.minimumSpanningTree());
+        // // System.out.println(g.ds.find(1));
+        // System.out.println(g.minimumSpanningTreeUsingKruskal());
+        // System.out.println(g.minimumSpanningTreeUsingPrim());
 
+        int[] minCosts = g.dijkstraAlgorithm(0);
+        for(int i=0;i<g.nVertex;i++)
+        {
+            System.out.println(i+" "+minCosts[i]);
+        }
     }
 }
