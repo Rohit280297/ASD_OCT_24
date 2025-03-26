@@ -126,8 +126,11 @@ class Graph{
             Node sourceNode = graph.get(source);
             Node destinationNode = graph.get(destination);
             sourceNode.adjacentNodes.add(destinationNode);
-            if(!isDirected)
+            this.edges.add(new Edge(source, destination, 0));
+            if(!isDirected){
                 destinationNode.adjacentNodes.add(sourceNode);
+                this.edges.add(new Edge(destination, source, 0));
+            }
         }
     }
 
@@ -310,6 +313,35 @@ class Graph{
         return minimumCost;
     }
 
+    int[] bellmanFordAlgorithm(int source)
+    {
+        int[] cost = new int[this.nVertex];
+        Arrays.fill(cost, Integer.MAX_VALUE);
+        cost[source] = 0;
+        for(int i=0;i<this.nVertex-1;i++)
+        {
+            for(Edge e : this.edges)
+            {
+                if(cost[e.destination] > cost[e.source]+e.weight)
+                {
+                    // relaxation of edges.
+                    cost[e.destination] = cost[e.source] + e.weight;
+                }
+            }
+        }
+
+        for(Edge e : this.edges)
+        {
+            if(cost[e.destination] > cost[e.source]+e.weight)
+            {
+                // relaxation of edges.
+                cost[e.destination] = cost[e.source] + e.weight;
+                return new int[0];
+            }
+        }
+        return cost;
+    }
+
     int[] dijkstraAlgorithm(int source){
         int[] cost = new int[this.nVertex];
         Arrays.fill(cost, Integer.MAX_VALUE);
@@ -333,14 +365,67 @@ class Graph{
                         cost[x.index] = p.cost + this.graph.get(p.index).getWeight(x.index);
                         pq.add(new Pair(x.index, cost[x.index]));
                     }
-                    
-                    
                 }
-                
             } 
         }
-
         return cost;
+    }
+
+    void applyDfs(int i, boolean[] visited, Stack<Integer> st)
+    {
+        visited[i] = true;
+        for(Node x : this.graph.get(i).adjacentNodes)
+        {
+            if(visited[x.index] == false)
+                applyDfs(x.index, visited, st);
+        }
+        st.push(i);
+    }
+
+    void topologicalSorting()
+    {
+        boolean[] visited = new boolean[this.nVertex];
+        Stack<Integer> st = new Stack<>();
+
+        for(int i=0;i<this.nVertex;i++)
+        {
+            if(visited[i] == false)
+                applyDfs(i, visited, st);
+        }
+
+        while(!st.isEmpty())
+            System.out.print(st.pop()+" ");
+        System.out.println();
+    }
+
+    void kahnAlgorithm()
+    {
+        int[] inDegree = new int[this.nVertex];
+        Queue<Integer> q = new LinkedList<>();
+        for(Edge e : this.edges)
+        {
+            inDegree[e.destination]++;
+        }
+
+        for(int i=0;i<this.nVertex;i++)
+        {
+            if(inDegree[i] == 0)
+                q.add(i);
+        }
+
+        while(!q.isEmpty())
+        {
+            int pop = q.remove();
+            System.out.print(pop+" ");
+            for(Node x : this.graph.get(pop).adjacentNodes)
+            {
+                inDegree[x.index]--;
+                if(inDegree[x.index] == 0)
+                    q.add(x.index);
+            }
+        }
+        System.out.println();
+
     }
 }
 
@@ -371,22 +456,32 @@ public class GraphImplementation {
         g.addVertex();
         g.addVertex();
         g.addVertex();
-        g.addEdge(0,1,3);
-        g.addEdge(0,2,6);
-        g.addEdge(2,4,8);
-        g.addEdge(1,3,2);
-        g.addEdge(1,2,9);
-        g.addEdge(0,4,5);
+        g.addEdge(0,1,true);
+        g.addEdge(1,2,true);
+        g.addEdge(3,4,true);
+        g.addEdge(3,2,true);
+        // g.addEdge(1,2,9);
+        // g.addEdge(0,4,5);
         // g.buildDisjointSet();
         // System.out.println(g.ds.find(0));
         // // System.out.println(g.ds.find(1));
         // System.out.println(g.minimumSpanningTreeUsingKruskal());
         // System.out.println(g.minimumSpanningTreeUsingPrim());
 
-        int[] minCosts = g.dijkstraAlgorithm(0);
-        for(int i=0;i<g.nVertex;i++)
-        {
-            System.out.println(i+" "+minCosts[i]);
-        }
+        // int[] minCosts = g.dijkstraAlgorithm(0);
+        // for(int i=0;i<g.nVertex;i++)
+        // {
+        //     System.out.println(i+" "+minCosts[i]);
+        // }
+
+        // System.out.println("****");
+        // int[] minCostsUsingBellmanFord = g.bellmanFordAlgorithm(0);
+        // for(int i=0;i<g.nVertex;i++)
+        // {
+        //     System.out.println(i+" "+minCostsUsingBellmanFord[i]);
+        // }
+
+        g.topologicalSorting();
+        g.kahnAlgorithm();
     }
 }
