@@ -289,11 +289,12 @@ class Graph{
         int minimumCost = 0;
         PriorityQueue<Edge> pq = new PriorityQueue<>(new EdgeComparator());
         boolean[] visited = new boolean[this.nVertex];
-        for(Edge e : this.graph.get(0).edges)
-        {
-            pq.add(e);
-        }
-        visited[0] = true;
+        // for(Edge e : this.graph.get(0).edges)
+        // {
+        //     pq.add(e);
+        // }
+        // visited[0] = true;
+        pq.add(new Edge(-1,0,0));
         while(!pq.isEmpty())
         {
             Edge e = pq.remove();
@@ -425,6 +426,60 @@ class Graph{
             }
         }
         System.out.println();
+    }
+
+    void printGraph(){
+        for(Node n : this.graph)
+        {
+            System.out.print(n.index+" -> ");
+            for(Node x : n.adjacentNodes)
+            {
+                System.out.print(x.index+" ");
+            }
+            System.out.println();
+        }
+    }
+
+    Graph transposeGraph(){
+        Graph tg = new Graph();
+        for(int i=0;i<this.nVertex;i++)
+            tg.addVertex();
+        
+            for(Edge e : this.edges)
+            {
+                tg.addEdge(e.destination, e.source, true);
+            }
+        return tg;
+    }
+
+    void kosarajuAlgorithm(){
+        boolean[] visited = new boolean[this.nVertex];
+        Stack<Integer> st = new Stack<>();
+
+        for(int i=0;i<this.nVertex;i++)
+        {
+            if(visited[i] == false)
+                applyDfs(i, visited, st);
+        }
+
+        Graph tg = transposeGraph();
+        ArrayList<Stack<Integer>> result = new ArrayList<>();
+        Arrays.fill(visited, false);
+        while(!st.isEmpty())
+        {
+            int popped = st.pop();
+            if(visited[popped] == false)
+            {
+                Stack<Integer> stack = new Stack<>();
+                tg.applyDfs(popped, visited, stack);
+                result.add(stack);
+            }
+        }
+
+        for(Stack<Integer> cc : result)
+        {
+            System.out.println(cc);
+        }
 
     }
 }
@@ -458,8 +513,9 @@ public class GraphImplementation {
         g.addVertex();
         g.addEdge(0,1,true);
         g.addEdge(1,2,true);
+        g.addEdge(2,3,true);
+        g.addEdge(3,0,true);
         g.addEdge(3,4,true);
-        g.addEdge(3,2,true);
         // g.addEdge(1,2,9);
         // g.addEdge(0,4,5);
         // g.buildDisjointSet();
@@ -481,7 +537,12 @@ public class GraphImplementation {
         //     System.out.println(i+" "+minCostsUsingBellmanFord[i]);
         // }
 
-        g.topologicalSorting();
-        g.kahnAlgorithm();
+        // g.topologicalSorting();
+        // g.kahnAlgorithm();
+
+            g.kosarajuAlgorithm();
+        // g.printGraph();
+        // Graph tg = g.transposeGraph();
+        // tg.printGraph();
     }
 }
